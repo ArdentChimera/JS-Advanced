@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0"
+  },
+  "name": "lection-07",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
