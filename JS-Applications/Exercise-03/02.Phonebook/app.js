@@ -2,62 +2,45 @@ function attachEvents() {
     handleLoad();
 
     const createBtn = document.getElementById('btnCreate');
-    createBtn.addEventListener('click', (e) => {
+    createBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-
-        submitEntry();
-
-        const ul = document.getElementById('phonebook');
-        ul.innerHTML = '';
-        const phoneBookData = getPhoneBook();
-        phoneBookData.then((phoneBook) => {
-            console.log(phoneBook);
-            for (const key in phoneBook) {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.setAttribute('id', 'delete');
-                deleteBtn.textContent = 'Delete';
-                const li = document.createElement('li');
-                li.innerHTML = `${phoneBook[key].person}: ${phoneBook[key].phone}`;
-                li.appendChild(deleteBtn);
-
-                ul.appendChild(li);
-            }
-        })
+        await submitEntry();
+        handleLoad(); // Reload the phonebook after creating a new entry
     });
-    
 }
 
-attachEvents();
-
+attachEvents(); 
 
 function handleLoad() {
-    const loadBtn = document.getElementById('btnLoad');
-    loadBtn.addEventListener('click', () => {
-        const ul = document.getElementById('phonebook');
+    const ul = document.getElementById('phonebook');
+    ul.innerHTML = ''; // Clear the phonebook list
 
-        const phoneBookData = getPhoneBook();
-        phoneBookData.then((phoneBook) => {
-            console.log(phoneBook);
-            for (const key in phoneBook) {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.setAttribute('id', 'delete');
-                deleteBtn.textContent = 'Delete';
-                const li = document.createElement('li');
-                li.innerHTML = `${phoneBook[key].person}: ${phoneBook[key].phone}`;
-                li.appendChild(deleteBtn);
+    getPhoneBook().then((phoneBook) => {
+        console.log(phoneBook);
+        for (const key in phoneBook) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
 
-                ul.appendChild(li);
-            }
-        })
+            deleteBtn.addEventListener('click', async (e) => {
+                const id = phoneBook[key]._id;
+                await deleteEntry(id);
+                handleLoad(); // Reload the phonebook after deleting an entry
+            });
+
+            const li = document.createElement('li');
+            li.setAttribute('id', phoneBook[key]._id);
+            li.innerHTML = `${phoneBook[key].person}: ${phoneBook[key].phone}`;
+            li.appendChild(deleteBtn);
+
+            ul.appendChild(li);
+        }
     });
 }
-
-
 
 async function getPhoneBook() {
     const url = 'http://localhost:3030/jsonstore/phonebook';
     try {
-        const response = await fetch(url)
+        const response = await fetch(url);
         const data = await response.json();
 
         return data;
@@ -68,25 +51,43 @@ async function getPhoneBook() {
 
 async function submitEntry() {
     const url = 'http://localhost:3030/jsonstore/phonebook';
-    const person = document.getElementById('person');
-    const phone = document.getElementById('phone');
+    const person = document.getElementById('person').value;
+    const phone = document.getElementById('phone').value;
 
     const body = JSON.stringify({
-        person: person.value,
-        phone: phone.value,
-    })
+        person,
+        phone,
+    });
 
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-type': 'application/json' },
-            body
-        })
-        const data = await response.json();
+            headers: { 'Content-Type': 'application/json' },
+            body,
+        });
+
         if (response.status === 200) {
-            return console.log('Creation successfull');
-        }else {
-            throw new Error('Creation failed:' + response.message);
+            console.log('Creation successful');
+        } else {
+            throw new Error('Creation failed');
+        }
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+async function deleteEntry(key) {
+    const url = `http://localhost:3030/jsonstore/phonebook/${key}`;
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (response.status === 200) {
+            console.log('Entry deleted');
+        } else {
+            throw new Error('Error deleting the entry');
         }
     } catch (error) {
         console.log(error.message);
